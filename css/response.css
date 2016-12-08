@@ -1,0 +1,11 @@
+
+@media only screen and (max-width: 479px) {
+    .kaib-c .tit a { padding: 1% 8% 1% 15%; }
+
+    .listinfo_age { padding: 1%; }
+    .listinfo_age li { width: 18%; }
+    .listinfo_age li a{  font-size: 1.2rem;}
+	
+}
+
+

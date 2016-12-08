@@ -1,0 +1,15 @@
+@charset "utf-8";
+body,h1,h2,h3,h4,h5,h6,hr,p,blockquote,dl,dt,dd,ul,ol,li,pre,form,fieldset,legend,button,input,textarea,th,td{margin:0;padding:0;}body,button,input,select,textarea{font:12px/1.5 \5b8b\4f53,arial,sans-serif;}h1,h2,h3,h4,h5,h6{font-size:100%;}address,cite,dfn,em,var{font-style:normal;}code,kbd,pre,samp{font-family:courier new,courier,monospace;}small{font-size:12px;}ul,ol{list-style:none;}a{text-decoration:none;}sup{vertical-align:text-top;}sub{vertical-align:text-bottom;}legend{color:#000;}fieldset,img{border:0;}button,input,select,textarea{font-size:100%;}table{border-collapse:collapse;border-spacing:0;}img{vertical-align:top;}.hidden{display:none;}.invisible{visibility:hidden;}.noBg{background:none !important;}.noBorder{border:none !important;}.clear{display:block;height:0;overflow:hidden;clear:both;}.clearfix:after{content:'\20';display:block;height:0;clear:both;}.clearfix{*zoom:1;}html{overflow-y:scroll;}.fl { float: left !important;}.fr { float: right !important;}.noMargin{margin:0 !important;}.noPadding{padding:0 !important;}
+
+body { margin:0 auto; font-size:13px; font-family: Arial; }
+body table { font-size:13px; }
+a { color:#036; }
+a:hover { color:#F60; text-decoration:none; }
+
+.login { background: url(tiny_grid.png) repeat; font-family: "微软雅黑"; text-align: center; }
+.loginAre { width: 360px; height: 230px; margin: 0px auto; margin-top: 180px; border-radius: 3px; border: 1px solid #d5d5d5; background: #f9f9f9; }
+.loginAre h1 { color: #f90; text-align: center; font-size: 26px; padding: 25px; font-weight: 100; height: 26px; }
+.loginAre .line { line-height: 30px; font-size: 14px; margin-bottom: 15px; padding: 0 30px; }
+.loginAre label { line-height: 26px; width: 50px; display: inline-block; height: 26px; }
+.loginAre input { border-radius: 3px; border: 1px #ccc solid; background: none; line-height: 26px; height: 26px; padding: 0 5px; width: 200px; }
+.loginAre button { border-radius: 3px; border: 1px #c27400 solid; background: #f90; color: #fff; line-height: 26px; padding: 0 5px; width: 80px; text-align: center; margin-left: 174px; }

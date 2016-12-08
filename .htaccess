@@ -1,0 +1,11 @@
+RewriteEngine On
+
+RewriteRule ^display-([^?.]+)\.html$ display.php?id=$1
+
+RewriteRule ^category-([^?.]+)-([^?.]+)\.html$ category.php?id=$1&page=$2
+RewriteRule ^category-([^?.]+)\.html$ category.php?id=$1
+
+RewriteRule ^message-([^?.]+)\.html$ message.php?id=$1
+
+RewriteRule ^search\.html$ search.php?keyword=&%{QUERY_STRING}
+RewriteRule ^sitemap\.html$ sitemap.php

@@ -1,0 +1,774 @@
+<?
+/**
+ * Class onlyDB     数据库类
+ */
+
+class onlyDB
+{
+	var $dbHost = "";
+	var $dbUser = "";
+	var $dbPassword = "";
+	var $dbName = "";
+	var $linkId;
+	var $debugMsg = array();
+	var $debugModule = false;
+
+	function onlyDB($dbHost, $dbUser, $dbPassword, $dbName = "")
+	{
+		$this->dbHost = $dbHost;
+		$this->dbUser = $dbUser;
+		$this->dbPassword = $dbPassword;
+		$this->dbName = $dbName;
+
+		if (!$this->connect()) {
+			exit("Failed to connect database server");
+		}
+	}
+
+	function connect()
+	{
+		$this->linkId = mysql_connect($this->dbHost, $this->dbUser, $this->dbPassword);
+
+		if (!$this->linkId) {
+			raise(new OnlyException('Faild to connect database server'));
+			return false;
+		}
+
+		$this->query("SET NAMES 'utf8'");
+
+		if ($this->dbName) {
+			return $this->select_db($this->dbName);
+		}
+
+		return true;
+	}
+
+	function pconnect()
+	{
+		$this->linkId = mysql_pconnect($this->dbHost, $this->dbUser, $this->dbPassword);
+
+		if (!$this->linkId) {
+			raise(new OnlyException('Faild to connect database server'));
+			return false;
+		}
+
+		if ($this->dbName) {
+			return $this->select_db($this->dbName);
+		}
+
+		return true;
+	}
+
+	function close()
+	{
+		mysql_close($this->linkId);
+	}
+
+	function select_db($dbName)
+	{
+		$rt = mysql_select_db($dbName);
+
+		if (!$rt) {
+			raise(new OnlyException($this->error()));
+		} else {
+			$this->dbName = $dbName;
+		}
+
+		return $rt;
+	}
+
+	function query($query)
+	{
+		if (!trim($query)) return false;
+
+		if ($this->debugModule) {
+			$start_time = $this->getMicroTime();
+		}
+
+		$rt = mysql_query($query, $this->linkId);
+
+		if (!$rt) raise(new SQLException($this->error(), 0, $query));
+
+		if ($this->debugModule) {
+			preg_match('/\s*([a-zA-Z]+).*/i', $query, $qtype);
+
+			$qtype = strToLower($qtype[1]);
+			$item['Type'] = 'Query';
+			$item['Sql'] = $query;
+			$item['Result'] = $qtype == "select" ? $this->num_rows($rt) : $this->affected_rows($rt);
+			$item['Error'] = $this->errno();
+			$item['ProcessTime'] = $this->getMicroTime() - $start_time;
+
+			$this->debugMsg[] = $item;
+		}
+
+		return $rt;
+	}
+
+	function affected_rows()
+	{
+		return mysql_affected_rows();
+	}
+
+	function num_rows($result)
+	{
+		$rt = mysql_num_rows($result);
+
+		if ($rt === false) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function num_fields($result)
+	{
+		$rt = mysql_num_fields($result);
+
+		if (!$rt) raise(new OnlyException($this->error($this->linkId)));
+
+		return $rt;
+	}
+
+	function fetch_array($result, $fetchModule = MYSQL_ASSOC)
+	{
+		return mysql_fetch_array($result, $fetchModule);
+	}
+
+	function fetch_object($result)
+	{
+		return mysql_fetch_object($result);
+	}
+
+
+	function getMicroTime()
+	{
+		list($a, $b) = explode(' ', microtime());
+
+		return (double)$b + (double)$a;
+	}
+
+
+	function error()
+	{
+		return mysql_error($this->linkId);
+	}
+
+	function errno()
+	{
+		return mysql_errno($this->linkId);
+	}
+
+
+	function data_seek($result, $row)
+	{
+		$rt = mysql_data_seek($result, $row);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function insert_id()
+	{
+		$rt = mysql_insert_id();
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function get_total_querys()
+	{
+		return count($this->debugMsg);
+	}
+
+	function get_total_process_time()
+	{
+		$total_process_time = 0;
+
+		for ($i = 0, $cnt = count($this->debugMessage); $i < $cnt; $i++) {
+			$total_process_time += $this->debugMsg[$i]['ProcessTime'];
+		}
+
+		return $total_process_time;
+	}
+
+	function debug()
+	{
+		$total_sql = 0;
+		$total_process_time = 0;
+
+		$str = "<table width=100% border=0 cellspacing=1 cellpadding=0 style='background-color:#CCCCCC;word-break:break-all;'>\n";
+
+		$str .= "<tr style='height:30px;background-color:#0099CC;color:#FFFFFF;text-align:center;font-family:Arial;'>
+		           <td width='60'>Type</td>
+				   <td>Sql</td>
+				   <td width='40'>Result</td>
+				   <td width='40'>Error</td>
+				   <td width='80'>ProcessTime</td>
+				</tr>\n";
+
+		for ($i = 0, $cnt = count($this->debugMsg); $i < $cnt; $i++) {
+			$str .= "<tr style='background-color:#EEEEEE;height:25px;text-align:center;font-family:Arial;'>
+		               <td>" . $this->debugMsg[$i]['Type'] . "</td>
+				       <td aling=left>" . HtmlSpecialChars($this->debugMsg[$i]['Sql']) . "</td>
+				       <td>" . $this->debugMsg[$i]['Result'] . "</td>
+				       <td>" . $this->debugMsg[$i]['Error'] . "</td>
+				       <td>" . sprintf('%.4f', $this->debugMsg[$i]['ProcessTime']) . "</td>
+					</tr>\n";
+
+			$total_sql++;
+			$total_process_time += $this->debugMsg[$i]['ProcessTime'];
+		}
+
+		$str .= "<tr style='background-color:#EEEEEE;height:30px;text-align:center;font-family:Arial;'>
+				   <td colspan=5>
+					   Total execute queries: " . $total_sql
+			. "&nbsp;Total ProcessTime:" . sprintf('%.4f', $total_process_time) . "
+					</td>
+				</tr>\n";
+
+		$str .= "</table>";
+
+		return $str;
+	}
+
+	//not in common use
+
+	function get_version()
+	{
+		$result = $this->query('select version() as Version', $this->linkId);
+		$arr = $this->fetch_array($result);
+
+		return 'MySQL' . $arr['Version'];
+	}
+
+	function get_db_host()
+	{
+		return $this->dbHost;
+	}
+
+	function get_table_size($tbName = '')
+	{
+		$sql = 'show table status';
+
+		if ($tbName) $sql .= " like '$tbName'";
+
+		$rst = $this->query($sql);
+
+		if (!$rst) return false;
+
+		$size = 0;
+
+		while ($row = $this->fetch_array($rst)) {
+			$size += $row['Data_length'] = $row['Index_length'];
+		}
+
+		return $size;
+	}
+
+	function escape_string($query)
+	{
+		return mysql_escape_string($query);
+	}
+
+	function get_pack_char()
+	{
+		return '`';
+	}
+
+	function db_backup($dbName = '')
+	{
+		if ($dbName == '') $dbName = $this->dbName;
+
+		$backupStr = '';
+		$tables = Array();
+
+		$rstDB = $this->list_tables($dbName);
+		for ($i = 0, $cnt = $this->num_rows($rstDB); $i < $cnt; $i++) {
+			$tables[] = $this->tablename($rstDB, $i);
+		}
+
+		for ($i = 0, $cnt = count($tables); $i < $cnt; $i++) {
+
+			$backupStr .= "DROP TABLE IF EXISTS `{$tables[$i]}`;\n\n";
+
+			$rstTable = $this->query("SHOW CREATE TABLE `{$tables[$i]}`");
+			$rowTable = $this->fetch_array($rstTable);
+
+			$backupStr .= $rowTable['Create Table'] . ";\n\n";
+
+			$backupStr .= "LOCK TABLES `{$tables[$i]}` WRITE;\n\n";
+
+			$rstRecord = $this->query("SELECT * FROM `{$tables[$i]}`");
+			while ($rowRecord = $this->fetch_array($rstRecord)) {
+				$comma = "";
+				$backupStr .= "INSERT INTO `{$tables[$i]}` VALUES (";
+
+				foreach ($rowRecord as $v) {
+					$backupStr .= $comma . "'" . $v . "'";
+					$comma = " ,";
+				}
+
+				$backupStr .= ");\n";
+			}
+
+			$backupStr .= "\n" . "UNLOCK TABLES;\n\n";
+
+		}
+		return $backupStr;
+	}
+
+	//about db
+	function create_db($dbName)
+	{
+		$rt = mysql_create_db($dbName, $this->linkId);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function drop_db($dbName)
+	{
+		$rt = mysql_drop_db($dbName, $this->linkId);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function list_dbs()
+	{
+		$rt = mysql_list_dbs($this->linkId);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function db_name($result, $row)
+	{
+		$rt = mysql_db_name($result, $row);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	//about table
+	function list_tables($dbName = '')
+	{
+		if (!$dbName) $dbName = $this->dbName;
+
+		$rt = mysql_list_tables($dbName, $this->linkId);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function tablename($result, $row)
+	{
+		$rt = mysql_tablename($result, $row);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	//about field
+	function list_fields($tableName, $dbName = '')
+	{
+		if (!$dbName) $dbName = $this->dbName;
+
+		$rt = mysql_list_fields($dbName, $tableName, $this->linkId);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function field_name($result, $offset)
+	{
+		$rt = mysql_field_name($result, $offset);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function field_type($result, $offset)
+	{
+		$rt = mysql_field_type($result, $offset);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function field_len($result, $offset)
+	{
+		$rt = mysql_field_len($result, $offset);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function fetch_field($result, $offset = 0)
+	{
+		if ($offset) {
+			return mysql_fetch_field($result, $offset);
+		} else {
+			return mysql_fetch_field($result);
+		}
+	}
+
+	function field_table($result, $offset)
+	{
+		$rt = mysql_field_table($result, $offset);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function field_seek($result, $offset)
+	{
+		$rt = mysql_field_seek($result, $offset);
+
+		if (!$rt) raise(new OnlyException($this->error()));
+
+		return $rt;
+	}
+
+	function getTableFieldValue($table, $getField, $where, $debug = false)
+	{
+		if ($table != "" && $getField != "" && $where != "") {
+			$sql = "select $getField as value from `$table` $where";
+
+			if ($debug) {
+				echo $sql;
+				exit;
+			}
+
+			$rst = $this->query($sql);
+			if ($row = $this->fetch_array($rst)) {
+				return $row["value"];
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * @param string $table 表名
+	 * @param string $field 字段名
+	 * @param string $where 条件语句
+	 * @param string $order 排序方法
+	 * @param bool|false $debug 是否输入输出SQL调试语句
+	 * @return null 返回指定字段值
+	 */
+	function getField($table, $field, $where, $order = null, $debug = false)
+	{
+		if ($table != "" && $field != "" && $where != "") {
+			$sql = "select $field as value from `$table` where $where";
+
+			if (!empty($order)) $sql .= ' '.$order;
+
+			if ($debug) {
+				echo $sql;
+				exit;
+			}
+
+			$rst = $this->query($sql);
+			if ($row = $this->fetch_array($rst)) {
+				return $row["value"];
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * @param string $table 表名
+	 * @param string $field 字段名
+	 * @param string $where 条件语句
+	 * @param bool|false $debug 是否输入输出SQL调试语句
+	 * @return mixed 返回最大指定字段最大值
+	 */
+	function getMax($table, $field, $where = '', $debug = false)
+	{
+		if (empty($where)) {
+			$sql = "select max( $field ) as cnt from `$table`";
+		} else {
+			$sql = "select max( $field ) as cnt from `$table` where $where";
+		}
+
+		if ($debug) {
+			echo $sql;
+			exit;
+		}
+
+		$rst = $this->query($sql);
+		$row = $this->fetch_array($rst);
+		return $row["cnt"];
+	}
+
+	/**
+	 * @param string $table 表名
+	 * @param string $where 条件语句
+	 * @param bool|false $debug 是否输入输出SQL调试语句
+	 * @return mixed 返回总数
+	 */
+	function getCount($table, $where, $debug = false)
+	{
+		if (empty($where)) {
+			$sql = "select count(*) as cnt from `$table`";
+		} else {
+			$sql = "select count(*) as cnt from `$table` where $where";
+		}
+
+		if ($debug) {
+			echo $sql;
+			exit;
+		}
+
+		$rst = $this->query($sql);
+		$row = $this->fetch_array($rst);
+		return $row["cnt"];
+	}
+
+	/**
+	 * @param string $table 表名
+	 * @param string $where 条件语句
+	 * @param null $order 排序方法
+	 * @param bool|false $debug 是否输入输出SQL调试语句
+	 * @return array|null 返回指定单条记录或首条记录
+	 */
+	function getByWhere($table, $where, $order = null, $debug = false)
+	{
+		if ($table != "" && $where) {
+			$sql = "select * from `$table` where $where $order lIMIT 1";
+
+			if ($debug) {
+				echo $sql;
+				exit;
+			}
+
+			$rst = $this->query($sql);
+			if ($row = $this->fetch_array($rst)) {
+				return $row;
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * @param string $table 表名
+	 * @param string $where 条件语句
+	 * @param null $order 排序方法
+	 * @param null $limit 条数
+	 * @param bool|false $debug 是否输入输出SQL调试语句
+	 * @return array|null 返回指定多条记录组
+	 */
+	function getList($table, $where = null, $order = null, $limit = null, $debug = false)
+	{
+		if ($table != "") {
+			$sql = "select * from `$table`";
+			if (!empty($where)) $sql .= " where " . $where;
+
+			if (!empty($order)) $sql .= ' '.$order;
+			if (!empty($limit)) $sql .= ' '.$limit;
+
+			if ($debug) {
+				echo $sql;
+				exit;
+			}
+
+			$rst = $this->query($sql);
+			$data = array();
+			while ($row = $this->fetch_array($rst)) {
+				$data[] = $row;
+			}
+			return $data;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * @param string $table 表名
+	 * @param string $fields 字段列表
+	 * @param string $where 条件语句
+	 * @param null $order 排序方法
+	 * @param null $limit 条数
+	 * @param bool|false $debug 是否输入输出SQL调试语句
+	 * @return array|null 返回指定多条记录组
+	 */
+	function getListField($table, $fields, $where = null, $order = null, $limit = null, $debug = false)
+	{
+		if ($table != "") {
+			$sql = "select $fields from `$table`";
+			if (!empty($where)) $sql .= " where " . $where;
+
+			if (!empty($order)) $sql .= ' '.$order;
+			if (!empty($limit)) $sql .= ' '.$limit;
+
+			if ($debug) {
+				echo $sql;
+				exit;
+			}
+
+			$rst = $this->query($sql);
+			$data = array();
+			while ($row = $this->fetch_array($rst)) {
+				$data[] = $row;
+			}
+			return $data;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * @param string $table 表名
+	 * @param string $data 字段、值集合
+	 * @param bool|false $debug 是否输入输出SQL调试语句
+	 * @param bool|false $lastId 是否输入输出当前插入的自增Id
+	 * @return null|resource 返回是否成功
+	 */
+	function add($table, $data, $lastId=false, $debug = false)
+	{
+		$field = array();
+		$value = array();
+
+		if ($table != "" && is_array($data)) {
+			foreach ($data as $k => $v) {
+				$field[] = '`' . $k . '`';  //将字段作为一个数组；
+				$value[] = "'" . $v . "'";  //将插入的值作为一个数组；
+			}
+			$field = implode(',', $field);
+			$value = implode(",", $value);
+			$sql = "insert into `$table` ( $field ) values ( $value )";
+
+			if ($debug) {
+				echo $sql;
+				exit;
+			}
+
+			$rst = $this->query($sql);
+			if($lastId){
+				return mysql_insert_id();
+			} else {
+				return $rst;
+			}
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * @param string $table 表名
+	 * @param string $data 字段、值集合
+	 * @param string $where 条件语句
+	 * @param bool|false $debug 是否输入输出SQL调试语句
+	 * @return null|resource 返回是否成功
+	 */
+	function update($table, $data, $where, $debug = false)
+	{
+		if ($table != "" && is_array($data) && $where != "") {
+			$tmp = null;
+			$i = 1;
+			foreach ($data as $k => $v) {
+				if ($i == 1) {
+					$tmp .= "`" . $k . "`=" . "'" . $v . "'";
+				} else {
+					$tmp .= ", `" . $k . "`=" . "'" . $v . "'";
+				}
+				$i++;
+			}
+			$sql = "update `$table` set $tmp where $where";
+
+			if ($debug) {
+				echo $sql;
+				exit;
+			}
+
+			$rst = $this->query($sql);
+			return $rst;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * @param string $table 表名
+	 * @param string $set 字段、值
+	 * @param string $where 条件语句
+	 * @param bool|false $debug 是否输入输出SQL调试语句
+	 * @return null|resource 返回是否成功
+	 */
+	function updateBySql($table, $set, $where, $debug = false)
+	{
+		if ($table != "" && $where != "") {
+			$sql = "update `$table` set $set where $where";
+
+			if ($debug) {
+				echo $sql;
+				exit;
+			}
+
+			$rst = $this->query($sql);
+			return $rst;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * @param string $table 表名
+	 * @param string $where 条件语句
+	 * @param bool|false $debug 是否输入输出SQL调试语句
+	 * @return null|resource 返回是否成功
+	 */
+	function delete($table, $where, $debug = false)
+	{
+		if ($table != "" && $where != "") {
+			$sql = "delete from `$table` where $where";
+
+			if ($debug) {
+				echo $sql;
+				exit;
+			}
+
+			$rst = $this->query($sql);
+			return $rst;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * @param string $parentId 栏目Id
+	 * @return array 返回子类数组
+	 */
+	function getInfoClass( $parentId='' )
+	{
+		$sql = "select id, name from `info_class` where id like '" . $parentId . "___' order by sortnum asc";
+		$rst = $this->query($sql);
+		$array = array();
+		while ($row = $this->fetch_array($rst)) {
+			$array[] = $row;
+		}
+		return $array;
+	}
+}
+?>
