@@ -1,7 +1,13 @@
 <?
 require_once("init.php");
 require_once("member/isLogin.php");
-
+require_once ("member/isCheckin.php");
+//if ($member['checkin']==0){
+//    info('我们的管理员会于12小时内审核您的账户,之后您就可以正常查看微记录了');
+//}
+//elseif($member['checkin']==2){
+//    info('您没有通过审核，本模块只对家长开放，如有疑问请咨询卓因客服');
+//}
 $id	= trim($_GET["id"]);
 
 if ( empty($id) || (int)$db->getCount('info_class', "id=$id") < 1 ) {

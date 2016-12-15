@@ -38,7 +38,7 @@ if (!$data = $db->getByWhere('kaiban', "id=$id and status>0")) {
         ?>
     </div>
     <div class="weix">
-        <div class="txt">请关注“卓因青少年创意工场”<br>长按下面二维码即可关注我们</div>
+        <div class="txt">请关注“卓因青少年创客工场”<br>长按下面二维码即可关注我们</div>
         <div class="pic"><img src="<?=PATH.UPLOAD_PATH.$site['wechat']?>"> </div>
     </div>
     <div class="btn"><a href="<?=PATH?>class_join.php?id=<?=$id?>"><img src="images/sk-2.jpg"> </a> </div>

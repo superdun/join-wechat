@@ -114,7 +114,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 					<td>手机</td>
 					<td>邮箱</td>
 					<td width="80">状态</td>
-<!--					<td width="80">收货地址</td>-->
+					<td width="80">微记录权限</td>
 				</tr>
 				<?
 				//列表
@@ -146,7 +146,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             }
                             ?>
                         </td>
-<!--                        <td><a href="--><?//=$adsUrl?><!--&id=--><?//=$row['id']?><!--">查看</a></td>-->
+						<td>
+							<?
+							switch ($row["checkin"])
+							{
+								case 2:
+									echo "<font color=#9E8803>禁用</font>";
+									break;
+								case 1:
+									echo "正常";
+									break;
+								default :
+									echo "<font color=#FF0000>未审核</font>";
+							}
+							?>
+						</td>
 					</tr>
 				<?
 				}

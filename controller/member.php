@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $data['last_login_time']= time();
         $data['last_login_ip']  = $_SERVER["REMOTE_ADDR"];
         $data['status']         = 1;
+        $data['checkin']        = 0;
 
         if (empty($data['name']) || empty($data['password']) || empty($data['password2']) || empty($data['phone'])) {
             exit(json_encode(array(

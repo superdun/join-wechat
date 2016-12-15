@@ -198,6 +198,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         $data['createdTime']    = strtotime($data['createdTime']);
         $data['title']          = filterHtml($data['title']);
+        $data['intro']          = replaceUpload(filterHtml($data['intro']));
 
         if($category['hasSelect']){
             $data['class_id'] = (int)$data['class_id'];
@@ -209,59 +210,218 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         /**
-         * 图片上传、删除处理
-         * 一定要先处理删除，再处理上传
+         * 图片上传处理
+         *
          */
-        //缩略图
-        //删除图片
-        if ($_POST['deletePic']) {
-            if ($data['pic']) deleteFile($data['pic']);
-            $data['pic'] = '';
-        }
-        if (isset($_FILES["pic"])) {
-            $pic = $_FILES["pic"];
-            $pic = uploadImg($pic, "jpg,jpeg,png,gif,swf");
-            if (!empty($pic)) {
-                //删除原图片
-                if ($data['pic']) deleteFile($data['pic']);
-                $data['pic'] = $pic;
+
+        $showclassPic=array();
+        $showPic=array();
+        for($i=0;$i<6;$i++){
+
+            if (isset($_FILES["showclass".($i+1)])) {
+                $pic = $_FILES["showclass".($i+1)];
+                $showclassPic[] = '/upload/'.uploadImg($pic, "jpg,jpeg,png,gif,swf");
+
+            }
+            else{
+                $showclassPic[]='#';
             }
         }
-        //大图
-        //删除图片
-        if ($_POST['deletePic2']) {
-            if ($data['pic2']) deleteFile($data['pic2']);
-            $data['pic2'] = '';
-        }
-        if (isset($_FILES["pic2"])) {
-            $pic2 = $_FILES["pic2"];
-            $pic2 = uploadImg($pic2, "jpg,jpeg,png,gif,swf");
-            if (!empty($pic2)) {
-                //删除原图片
-                if ($data['pic2']) deleteFile($data['pic2']);
-                $data['pic2'] = $pic2;
+        for($j=0;$j<4;$j++){
+
+            if (isset($_FILES["show".($j+1)])) {
+                $pic = $_FILES["show".($j+1)];
+                $showPic[] = '/upload/'.uploadImg($pic, "jpg,jpeg,png,gif,swf");
+            }
+            else{
+                $showPic[]='#';
             }
         }
-        //附件
-        //删除图片
-        if ($_POST['deleteAnnex']) {
-            if ($data['annex']) deleteFile($data['annex']);
-            $data['annex'] = '';
-        }
-        if (isset($_FILES["annex"])) {
-            $annex = $_FILES["annex"];
-            $annex = uploadImg($annex, "gif,jpg,png,jpeg,pdf,doc,xls,ppt,rar,zip,flv,mp4");
-            if (!empty($pic2)) {
-                //删除原文件
-                if ($data['annex']) deleteFile($data['annex']);
-                $data['annex'] = $annex;
-            }
-        }
+
 
         if($category['hasViews']){
             $data['views']      = filterHtml($data['views']);
         }
-        $model = <<<EOT
+        $tableModel1 = !$advData['week1task']? '':<<<tableModel1
+            <td colspan="2" style="text-align:center;">
+                第1周
+            </td>
+        </tr>
+        <tr>
+            <td>
+<p>
+    课堂任务
+</p>
+<p>
+    {$advData['week1task']}
+</p>
+</td>
+<td>
+    <p>
+        课后挑战
+    </p>
+    <p>
+        {$advData['week1chllg']}
+    </p>
+</td>
+</tr>
+tableModel1;
+        $tableModel2 = !$advData['week2task']? '':<<<tableModel2
+            <td colspan="2" style="text-align:center;">
+                第2周
+            </td>
+        </tr>
+        <tr>
+            <td>
+<p>
+    课堂任务
+</p>
+<p>
+    {$advData['week2task']}
+</p>
+</td>
+<td>
+    <p>
+        课后挑战
+    </p>
+    <p>
+        {$advData['week2chllg']}
+    </p>
+</td>
+</tr>
+tableModel2;
+        $tableModel3 = !$advData['week3task']? '':<<<tableModel3
+            <td colspan="2" style="text-align:center;">
+                第3周
+            </td>
+        </tr>
+        <tr>
+            <td>
+<p>
+    课堂任务
+</p>
+<p>
+    {$advData['week3task']}
+</p>
+</td>
+<td>
+    <p>
+        课后挑战
+    </p>
+    <p>
+        {$advData['week3chllg']}
+    </p>
+</td>
+</tr>
+tableModel3;
+        $tableModel4 = !$advData['week4task']? '':<<<tableModel4
+            <td colspan="2" style="text-align:center;">
+                第4周
+            </td>
+        </tr>
+        <tr>
+            <td>
+<p>
+    课堂任务
+</p>
+<p>
+    {$advData['week4task']}
+</p>
+</td>
+<td>
+    <p>
+        课后挑战
+    </p>
+    <p>
+        {$advData['week4chllg']}
+    </p>
+</td>
+</tr>
+tableModel4;
+        $showclassModel1 = !$advData['showclasstext1']? '':<<<showclassModel1
+        <p>
+    <img src="{$showclassPic[0]}" alt="" style="width:70%;"/>
+</p>
+<p>
+    {$advData['showclasstext1']}
+</p>
+showclassModel1;
+        $showclassModel2 = !$advData['showclasstext2']? '':<<<showclassModel2
+        <p>
+    <img src="{$showclassPic[1]}" alt="" style="width:70%;"/>
+</p>
+<p>
+    {$advData['showclasstext2']}
+</p>
+showclassModel2;
+        $showclassModel3 = !$advData['showclasstext3']? '':<<<showclassModel3
+        <p>
+    <img src="{$showclassPic[2]}" alt="" style="width:70%;"/>
+</p>
+<p>
+    {$advData['showclasstext3']}
+</p>
+showclassModel3;
+        $showclassModel4 = !$advData['showclasstext4']? '':<<<showclassModel4
+        <p>
+    <img src="{$showclassPic[3]}" alt="" style="width:70%;"/>
+</p>
+<p>
+    {$advData['showclasstext4']}
+</p>
+showclassModel4;
+        $showclassModel5 = !$advData['showclasstext5']? '':<<<showclassModel5
+        <p>
+    <img src="{$showclassPic[4]}" alt="" style="width:70%;"/>
+</p>
+<p>
+    {$advData['showclasstext5']}
+</p>
+showclassModel5;
+        $showclassModel6 = !$advData['showclasstext6']? '':<<<showclassModel6
+        <p>
+    <img src="{$showclassPic[5]}" alt="" style="width:70%;"/>
+</p>
+<p>
+    {$advData['showclasstext6']}
+</p>
+showclassModel6;
+        $showModel1 = !$advData['showtext1']?'':<<<showModel1
+<p>
+    <img src="{$showPic[0]}" alt="" style="width:70%;"/>
+</p>
+<p>
+    {$advData['showtext1']}
+</p>
+showModel1;
+        $showModel2 = !$advData['showtext2']?'':<<<showModel2
+<p>
+    <img src="{$showPic[1]}" alt="" style="width:70%;"/>
+</p>
+<p>
+    {$advData['showtext2']}
+</p>
+showModel2;
+        $showModel3 = !$advData['showtext3']?'':<<<showModel3
+<p>
+    <img src="{$showPic[2]}" alt="" style="width:70%;"/>
+</p>
+<p>
+    {$advData['showtext3']}
+</p>
+showModel3;
+        $showModel4 = !$advData['showtext4']?'':<<<showModel4
+<p>
+    <img src="{$showPic[3]}" alt="" style="width:70%;"/>
+</p>
+<p>
+    {$advData['showtext4']}
+</p>
+showModel4;
+        $tableModel =  $tableModel1. $tableModel2. $tableModel3. $tableModel4;
+        $showclassModel = $showclassModel1.$showclassModel2.$showclassModel3.$showclassModel4.$showclassModel5.$showclassModel6;
+        $showModel = $showModel1.$showModel2.$showModel3.$showModel4;
+        $model = <<<model
 <p>
     <span><strong>项目主题</strong>：</span>
 </p>
@@ -284,13 +444,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <strong>学习目标</strong>：
 </p>
 <p>
-    核心知识点 — （2-3小点）
+    核心知识点 — {$advData['point']}
 </p>
 <p>
-    应用与技能 — （2-3小点）
+    应用与技能 — {$advData['skill']}
 </p>
 <p>
-    21世纪能力 — <span>（2-3小点）</span>
+    21世纪能力 — {$advData['twentyone']}
 </p>
 <p>
 	<span><br />
@@ -300,7 +460,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <strong>驱动性问题</strong>：
 </p>
 <p>
-    <span style="color:#009900;">如果有一天我们居住的环境及星球遭到破坏，我们需要一艘怎样的“诺亚方舟”才能拯救地球？</span>
+    <span style="color:#009900;">{$advData['questions']}</span>
 </p>
 <p>
     <br />
@@ -309,102 +469,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <strong>项目计划书</strong>：
 </p>
 <p>
-    <table style="width:100%;" cellpadding="2" cellspacing="0" border="1" bordercolor="#000000">
+    <table style="width:70%;" cellpadding="2" cellspacing="0" border="1" bordercolor="#000000">
         <tbody>
-        <tr>
-            <td colspan="2" style="text-align:center;">
-                第一周
-            </td>
-        </tr>
-        <tr>
-            <td>
-<p>
-    课堂任务
-</p>
-<p>
-    <br />
-</p>
-</td>
-<td>
-    <p>
-        课后挑战
-    </p>
-    <p>
-        <br />
-    </p>
-</td>
-</tr>
-<tr>
-    <td colspan="2" style="text-align:center;">
-        第二周
-    </td>
-</tr>
-<tr>
-    <td>
-        <p>
-            课堂任务
-        </p>
-        <p>
-            <br />
-        </p>
-    </td>
-    <td>
-        <p>
-            课后挑战
-        </p>
-        <p>
-            <br />
-        </p>
-    </td>
-</tr>
-<tr>
-    <td colspan="2" style="text-align:center;">
-        第三周
-    </td>
-</tr>
-<tr>
-    <td>
-        <p>
-            课堂任务
-        </p>
-        <p>
-            <br />
-        </p>
-    </td>
-    <td>
-        <p>
-            课后挑战
-        </p>
-        <p>
-            <br />
-        </p>
-    </td>
-</tr>
-<tr>
-    <td colspan="2" style="text-align:center;">
-        第四周
-    </td>
-</tr>
-<tr>
-    <td>
-        <p>
-            课堂任务
-        </p>
-        <p>
-            <br />
-        </p>
-    </td>
-    <td>
-        <p>
-            课后挑战
-        </p>
-        <p>
-            <br />
-        </p>
-    </td>
-</tr>
-</tbody>
-</table>
+        {$tableModel}
+        </tbody>
+    </table>
 </p>
 <p>
     <br />
@@ -413,49 +482,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <p>
     <br />
 </p>
-<p>
-    <img src="/upload/image/20161208/20161208194459_67617.jpg" alt="" />
-</p>
-<p>
-    （照片的尺寸不知道多少合适）
-</p>
-<p>
-    此处应该是描述，省略20个字
-</p>
-<p>
-    <img src="/upload/image/20161208/20161208195627_41050.jpg" alt="" /><br />
-    （这张照片是竖着的，不知道在手机上会怎么样）
-</p>
-<p>
-    <span>此</span><span>处应该是描述</span><span>，省略20个字</span>。
-</p>
-<p>
-    <img src="/upload/image/20161208/20161208195907_30986.jpg" alt="" />
-</p>
-<p>
-    <span>此</span><span>处应该是描述</span><span>，省略20个字</span><span>。</span>
-</p>
-<p>
-    <img src="/upload/image/20161208/20161208195945_98882.jpg" alt="" />此处应该是描述，省略20个字。
-</p>
-<p>
-    <img src="/upload/image/20161208/20161208200428_17597.jpg" alt="" />
-</p>
-<p>
-    如果比较大的图片，是不是可以上传后自动调整成适合的尺寸？
-</p>
-<p>
-    <img src="/upload/image/20161208/20161208200524_36130.jpg" alt="" />比如像这张？图片很大。总共传6张差不多了，可以设置上传6-8张。
-</p>
+{$showclassModel}
 <p>
     <strong>成果展示</strong>：
 </p>
-<p>
-    <img src="/upload/image/20161208/20161208200929_84432.jpg" alt="" />
-</p>
-<p>
-    同上一点，2-4张图片上传＋文字介绍。
-</p>
+{$showModel}
 <p>
     <br />
 </p>
@@ -483,8 +514,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <p>
     <br />
 </p>
-EOT;
-
+model;
+        $data['content'] = $model;
         $data['content']        = replaceUpload(filterHtml($data['content']));
 
 
@@ -664,27 +695,6 @@ EOT;
             <?
             }
 
-            if ($category['hasPic']) {
-            ?>
-                <tr class="editTr">
-                    <td class="editLeftTd">缩略图</td>
-                    <td class="editRightTd">
-                        <input type="file" name="pic" size="40">
-                        <?
-                        if (!empty($data['pic'])){
-                            ?>
-                            <span><a href="<?= PATH . UPLOAD_PATH . $data['pic'] ?>" target="_blank">查看图片</a></span>
-                            <input type="checkbox" name="deletePic" id="deletePic" value="1">
-                            <label for="deletePic">删除图片</label>
-                            <?
-                        }
-                        ?>
-                        <label class="red"> (文件必须是JPG、JPEG、PNG、GIF、SWF格式)</label>
-                    </td>
-                </tr>
-            <?
-            }
-
             if ($category['hasPic2']) {
             ?>
                 <tr class="editTr">
@@ -755,12 +765,21 @@ EOT;
             <? if($advEditor) {
                 ?>
                 <tr class="editTr">
-                    <td class="editLeftTd">项目主题</td>
-                    <td class="editRightTd"><input type="text" name="data[subject]" size="80"></td>
+                    <td class="editLeftTd">简介</td>
+                    <td class="editRightTd"><textarea name="data[intro]" id="intro"
+                                                      class="textareaSmall"><?= replaceUploadBack($data['intro']) ?></textarea>
+                    </td>
                 </tr>
                 <tr class="editTr">
                     <td class="editLeftTd">题记</td>
                     <td class="editRightTd"><input type="text" name="advData[subTitle]" size="80"></td>
+                </tr>
+                <tr class="editTr">
+                    <td class="editLeftTd">学习目标</td>
+                    <td class="editRightTd">
+                        核心知识点 — （2-3小点）<input type="text" name="advData[point]" size="80">
+                        <br>应用与技能 — （2-3小点）<input type="text" name="advData[skill]" size="80">
+                        <br>21世纪能力 — （2-3小点）<input type="text" name="advData[twentyone]" size="80"></td>
                 </tr>
                 <tr class="editTr">
                     <td class="editLeftTd">驱动性问题</td>
@@ -768,18 +787,70 @@ EOT;
                 </tr>
                 <tr class="editTr">
                     <td class="editLeftTd">项目计划</td>
-                    <td class="editRightTd"><input type="text" name="advData[project]" size="80"></td>
+                    <td class="editRightTd">
+                        第一周 任务<input type="text" name="advData[week1task]" size="40">
+                        挑战<input type="text" name="advData[week1chllg]" size="40">
+                        <br>第二周 任务<input type="text" name="advData[week2task]" size="40">
+                        挑战<input type="text" name="advData[week2chllg]" size="40">
+                        <br>第三周 任务<input type="text" name="advData[week3task]" size="40">
+                        挑战<input type="text" name="advData[week3chllg]" size="40">
+                        <br>第四周 任务<input type="text" name="advData[week4task]" size="40">
+                        挑战<input type="text" name="advData[week4chllg]" size="40">
+                    </td>
+                </tr>
+                <tr class="editTr">
+                    <td class="editLeftTd">课堂掠影</td>
+                    <td class="editRightTd">
+                        <input type="file" size="40" name="showclass1">
+                        简介 <input type="text" name="advData[showclasstext1]" size="40">
+                        <br><input type="file" size="40" name="showclass2">
+                        简介 <input type="text" name="advData[showclasstext2]" size="40">
+                        <br><input type="file" size="40" name="showclass3">
+                        简介 <input type="text" name="advData[showclasstext3]" size="40">
+                        <br><input type="file" size="40" name="showclass4">
+                        简介 <input type="text" name="advData[showclasstext4]" size="40">
+                        <br><input type="file" size="40" name="showclass5">
+                        简介 <input type="text" name="advData[showclasstext5]" size="40">
+                        <br><input type="file" size="40" name="showclass6">
+                        简介 <input type="text" name="advData[showclasstext6]" size="40">
+                    </td>
                 </tr>
                 <tr class="editTr">
                     <td class="editLeftTd">成果展示</td>
                     <td class="editRightTd">
-                        <input type="file" size="40" id="show">
-                        <label class="red"> (文件必须是JPG、JPEG、PNG、GIF、SWF格式)</label>
+                        <input type="file" size="40" name="show1">
+                        简介 <input type="text" name="advData[showtext1]" size="40">
+                        <br><input type="file" size="40" name="show2">
+                        简介 <input type="text" name="advData[showtext2]" size="40">
+                        <br><input type="file" size="40" name="show3">
+                        简介 <input type="text" name="advData[showtext3]" size="40">
+                        <br><input type="file" size="40" name="show4">
+                        简介 <input type="text" name="advData[showtext4]" size="40">
                     </td>
                 </tr>
                 <?
             }
             else {
+                if ($category['hasPic']) {
+                    ?>
+                    <tr class="editTr">
+                        <td class="editLeftTd">缩略图</td>
+                        <td class="editRightTd">
+                            <input type="file" name="pic" size="40">
+                            <?
+                            if (!empty($data['pic'])){
+                                ?>
+                                <span><a href="<?= PATH . UPLOAD_PATH . $data['pic'] ?>" target="_blank">查看图片</a></span>
+                                <input type="checkbox" name="deletePic" id="deletePic" value="1">
+                                <label for="deletePic">删除图片</label>
+                                <?
+                            }
+                            ?>
+                            <label class="red"> (文件必须是JPG、JPEG、PNG、GIF、SWF格式)</label>
+                        </td>
+                    </tr>
+                    <?
+                }
 
                 if ($category['hasIntro']) {
                     ?>

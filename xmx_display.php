@@ -118,7 +118,7 @@ foreach($related as $key=>$val){
               说明：集满20个赞即获得卓因惊喜礼品哦！
           </div>
           <div class="weix" style="padding-top: 20px;">
-              <div class="txt">请关注“卓因青少年创意工场”<br>长按下面二维码即可关注我们</div>
+              <div class="txt">请关注“卓因青少年创客工场”<br>长按下面二维码即可关注我们</div>
               <div class="pic"><img src="images/zy-weix.png"> </div>
           </div>
       </div>

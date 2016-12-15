@@ -49,6 +49,9 @@ switch($current_file_name)
 	case "manage_info.php":
 		if ($session_admin_grade != ADMIN_HIDDEN && $session_admin_grade != ADMIN_SYSTEM) $allow = false;
 		break;
+	case "admin_checkin_account.php":
+		if ($session_admin_grade != ADMIN_HIDDEN && $session_admin_grade != ADMIN_SYSTEM) $allow = false;
+		break;
 }
 
 if (!$allow)

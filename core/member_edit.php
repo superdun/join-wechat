@@ -30,8 +30,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
     $pass	= trim($_POST["pass"]);
     $pass2	= trim($_POST["pass2"]);
     $status		= (int)$_POST["status"];
-
-    if( empty($name) ||  empty($email) ){
+    $checkin    = (int)$_POST["checkin"];
+    if( empty($name) &&  empty($email) ){
         info("帐号、邮箱必填！");
     }
 
@@ -50,14 +50,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
     else
     {
         if ( empty($pass) && empty($pass2) ) {
-            $sql = "update member set name='$name', email='$email', phone='$phone', status=$status where id='$id'";
+            $sql = "update member set name='$name', email='$email', phone='$phone', status=$status ,checkin=$checkin where id='$id'";
         } else {
             if ( (!empty($pass) && strlen($pass) < 8) || (!empty($pass2) && strlen($pass2) < 8) ){
                 info("登录密码不能为空或者少于8位！");
             } elseif ( $pass !== $pass2 ) {
                 info("两次密码不一致！");
             }
-            $sql = "update member set name='$name', password='" . md5($pass) . "', email='$email', phone='$phone', status=$status where id='$id'";
+            $sql = "update member set name='$name', password='" . md5($pass) . "', email='$email', phone='$phone', status=$status ,checkin=$checkin where id='$id'";
         }
     }
     $rst = $db->query($sql);
@@ -75,6 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
             $phone		= $row["phone"];
             $email		= $row["email"];
             $status		= $row["status"];
+            $checkin    = $row["checkin"];
         }
     }
 }
@@ -135,6 +136,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
                     <td class="editRightTd">
                         <input type="radio" name="status" value="0"<? if ($status == 0) echo " checked"?>>禁用
                         <input type="radio" name="status" value="1"<? if ($status == 1) echo " checked"?>>正常
+                    </td>
+                </tr>
+                <tr class="editTr">
+                    <td class="editLeftTd">微记录权限</td>
+                    <td class="editRightTd">
+                        <input type="radio" name="checkin" value="2"<? if ($checkin == 2) echo " checked"?>>禁用
+                        <input type="radio" name="checkin" value="1"<? if ($checkin == 1) echo " checked"?>>正常
                     </td>
                 </tr>
                 <tr class="editFooterTr">
